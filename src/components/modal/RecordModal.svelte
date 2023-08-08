@@ -1,10 +1,12 @@
 <script>
     import { getContext } from 'svelte';
-	import { getPlayerCollectionDoc } from '../../firebase';
 	import ComboBox from '../combobox/ComboBox.svelte';
     export let message;
     export let hasForm = false;
     export let onOkay = () => {};
+    export let playersData = [];
+    console.log(playersData, 'playersData by ReecordModal.svelte')
+    console.log(hasForm, 'hasForm  by ReecordModal.svelte')
   
     const { close } = getContext('simple-modal');
       
@@ -14,22 +16,24 @@
         update: false
       };
 
-      let playerList = []
-      getPlayerCollectionDoc()
-        .then(players => {
-            playerList = players.map((item) => {
-                return { text: item.name, value: item.name }
-            })
-        })
-
       let onChange = () => {};
       
       function _onCancel() {
           close();
+          recordValue = {
+                loser: "",
+                winner: "",
+                update: false
+            };
       }
       
       function _onOkay() {
           onOkay(recordValue);
+          recordValue = {
+                loser: "",
+                winner: "",
+                update: false
+            };
           close();
       }
       
@@ -38,25 +42,21 @@
   
   <h2>{message}</h2>
   
-  {#if hasForm}
-    <!--승리자
-    <input
-      type="text" required bind:value={recordValue.winner}/>
-    <br/>
-    패배자
-    <input
-      type="text" required bind:value={recordValue.loser}/>-->
+  {#if hasForm && playersData.length > 0}
       <ComboBox
         label="승리자"
         name="winner"
         placeholder="선택해 주세요."
-        options={playerList}
+        options={playersData}
+        bind:value={recordValue.winner}
       />
+      <br />
       <ComboBox
         label="패배자"
         name="loser"
         placeholder="선택해 주세요."
-        options={playerList}
+        options={playersData}
+        bind:value={recordValue.loser}
       />
   {/if}
   

@@ -1,7 +1,10 @@
 <script>
     import { getContext } from 'svelte';      
 	import { addRecordDoc } from '../../firebase';
-      import RecordModal from './RecordModal.svelte';
+    import RecordModal from './RecordModal.svelte';
+
+    export let playersData = [];
+    console.log(playersData, 'playersData from Content.svelte')
   
     const { open } = getContext('simple-modal');
       
@@ -16,6 +19,7 @@
                   message: "경기 기록",
                   hasForm: true,
                   onOkay,
+                  playersData,
               },
               {
                   closeButton: false,

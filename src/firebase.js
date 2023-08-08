@@ -1,92 +1,70 @@
 import { firebaseConfig } from './env';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, addDoc, collection, onSnapshot, query, where, setDoc, updateDoc, getDoc, doc, increment, writeBatch } from "firebase/firestore";
+import { getFirestore, addDoc, collection, onSnapshot, getDocs, doc, increment, writeBatch } from "firebase/firestore";
 
 // init firebase app
-let app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
 // init services
-let db = getFirestore(app);
+const db = getFirestore(app);
 
 // collection ref
 const playerColRef = collection(db, 'player')
 const recordColRef = collection(db, 'record')
 
-// queries
-//const q = query(playerColRef, where("key", "==", "value"))
-
 // [ Cloud Firestore의 문서 생성 ]
 export const addRecordDoc = async (recordValue) => {
     try {
         const docRef = await addDoc(recordColRef, recordValue);
-        console.log("Document written with ID: ", docRef.id);
     } catch (e) {
         console.error("Error adding document: ", e);
     }
 }
-//console.log("createCollectionDoc()", createCollectionDoc())
 
 // [실시간 Player 컬렉션 문서들 읽기]
-export const getPlayerCollectionDoc = async () => {
-    let playerArr = [];
+//export const getPlayerCollectionDoc = (callback) => {
+//    playerColRef.get().then((snapshot) => {
+//      const playerArr = [];
+//      snapshot.forEach((doc) => {
+//        playerArr.push({ ...doc.data(), id: doc.id });
+//      });
+//      callback(playerArr);
+//    });
+//  };
+
+export const getPlayerCollectionDoc = (callback) => {
     try {
-        return new Promise((resolve, reject) => {
-            onSnapshot(playerColRef, (snapshot) => {
-                snapshot?.forEach((doc) => {
-                    playerArr.push({ ...doc.data(), id: doc.id });
-                });
-                resolve(playerArr);
-            });
-        });
-    } catch (err) {
-        console.error("Error adding document: ", err);
-        return Promise.reject(err);
+      const unsubscribe = onSnapshot(playerColRef, (snapshot) => {
+        const playerArr = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+        callback(playerArr);
+      });
+      return unsubscribe;
+    } catch (e) {
+      console.error("Error getting player collection documents: ", e);
+      return null;
     }
-};
+  };
+  
 
-//getPlayerCollectionDoc();
-
+// [Record 컬렉션의 문서 변경으로 Player 컬렉션의 문서 변경]
 const updatePlayerByRecord = () => {
-    let recoredArr = []
     try {
         onSnapshot(recordColRef, (snapshot) => {
-            const updates = [];
-
+            const batch = writeBatch(db);
             snapshot?.forEach((docData) => {
-                let recordDoc = doc(db, "record", docData.id)
-                let winnerDoc = doc(db, "player", docData.data().winner)
-                let loserDoc = doc(db, "player", docData.data().loser)
+                const recordDoc = doc(db, "record", docData.id);
+                const winnerDoc = doc(db, "player", docData.data().winner);
+                const loserDoc = doc(db, "player", docData.data().loser);
 
                 if (docData.data()?.update !== true) {
-                    console.log("docData.data()", docData.data())
-                    updates.push(
-                        {
-                            ref: recordDoc,
-                            update: { update: true },
-                        },
-                        {
-                            ref: winnerDoc,
-                            update: { win: increment(1) },
-                        },
-                        {
-                            ref: loserDoc,
-                            update: { lose: increment(1) },
-                        },
-                        )
+                    batch.update(recordDoc, { update: true });
+                    batch.update(winnerDoc, { win: increment(1) });
+                    batch.update(loserDoc, { lose: increment(1) });
                 }
-
-                recoredArr.push({ ...docData.data(), id: docData.id })
             });
-            const batch = writeBatch(db)
-            updates.forEach(update => batch.update(update.ref, update.update))
-            batch.commit().then(updates.length = 0);
-
-            //console.log("recoredArr", recoredArr)
+            batch.commit();
         });
-        return recoredArr;
     } catch (err) {
-        console.error("Error adding document: ", err);
+        console.error("Error updating document: ", err);
     }
 }
-
-updatePlayerByRecord()

@@ -86,6 +86,7 @@
     }
   
     async function onInputClick(event) {
+        console.log('Run onInputClick')
       await showList(event.target.value);
       // Scroll selected option into view.
       listElement.querySelector(`[role="option"][data-value="${value}"]`)?.scrollIntoView();
@@ -212,9 +213,9 @@
         {readonly}
         {placeholder}
         spellcheck="false"
-              role="combobox"
-              aria-autocomplete="list"
-              aria-expanded={isListOpen}
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={isListOpen}
         aria-required={required ? "true" : undefined}
       />
   
@@ -249,9 +250,9 @@
                   {option.text}
                 </slot>
                               {#if option.value === value}
-                  <svg viewBox="0 0 24 24" class="icon">
+                  <!--<svg viewBox="0 0 24 24" class="icon">
                                     <polyline points="20 6 9 17 4 12"></polyline>
-                                  </svg>
+                                  </svg>-->
                 {/if}
               </li>
             {/each}
@@ -270,9 +271,9 @@
                   {option.text}
                 </slot>
                               {#if option.value === value}
-                  <svg viewBox="0 0 24 24" class="icon">
+                  <!--<svg viewBox="0 0 24 24" class="icon">
                                     <polyline points="20 6 9 17 4 12"></polyline>
-                                  </svg>
+                                  </svg>-->
                 {/if}
             </li>
           {/if}

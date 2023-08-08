@@ -504,9 +504,8 @@
   
     .window {
       position: relative;
-      width: 40rem;
-      max-width: 100%;
-      max-height: 100%;
+      width: 600px;
+      height: 400px;
       margin: 2rem auto;
       color: black;
       border-radius: 0.5rem;
@@ -517,7 +516,7 @@
       position: relative;
       padding: 1rem;
       max-height: calc(100vh - 4rem);
-      overflow: auto;
+      /*overflow: auto;*/
     }
   
     .close {
