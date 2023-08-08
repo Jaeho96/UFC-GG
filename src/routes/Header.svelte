@@ -6,7 +6,7 @@
 
 <header>
 	<div class="corner">
-		<a href="https://kit.svelte.dev">
+		<a href="/">
 			<img src={logo} alt="SvelteKit" />
 		</a>
 	</div>
@@ -19,6 +19,7 @@
 			<li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
 				<a href="/">Home</a>
 			</li>
+            <!-- 다른 페이지 필요시 추가 작업 예정 현재는 X -->
 			<!--<li aria-current={$page.url.pathname === '/about' ? 'page' : undefined}>
 				<a href="/about">About</a>
 			</li>
@@ -32,7 +33,7 @@
 	</nav>
 
 	<div class="corner">
-		<a href="https://github.com/sveltejs/kit">
+		<a href="https://github.com/Jaeho96/UFC-GG">
 			<img src={github} alt="GitHub" />
 		</a>
 	</div>

@@ -1,92 +1,44 @@
 import { firebaseConfig } from './env';
-import { initializeApp } from 'firebase/app';
-import { getFirestore, addDoc, collection, onSnapshot, query, where, setDoc, updateDoc, getDoc, doc, increment, writeBatch } from "firebase/firestore";
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getDatabase } from "firebase/database";
+import { ref, set, push, onValue } from "firebase/database";
 
 // init firebase app
-let app = initializeApp(firebaseConfig);
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// init services
-let db = getFirestore(app);
+//export default app;
+const db = getDatabase(app);
 
-// collection ref
-const playerColRef = collection(db, 'player')
-const recordColRef = collection(db, 'record')
-
-// queries
-//const q = query(playerColRef, where("key", "==", "value"))
-
-// [ Cloud Firestore의 문서 생성 ]
-export const addRecordDoc = async (recordValue) => {
-    try {
-        const docRef = await addDoc(recordColRef, recordValue);
-        console.log("Document written with ID: ", docRef.id);
-    } catch (e) {
-        console.error("Error adding document: ", e);
-    }
-}
-//console.log("createCollectionDoc()", createCollectionDoc())
-
-// [실시간 Player 컬렉션 문서들 읽기]
-export const getPlayerCollectionDoc = async () => {
-    let playerArr = [];
-    try {
-        return new Promise((resolve, reject) => {
-            onSnapshot(playerColRef, (snapshot) => {
-                snapshot?.forEach((doc) => {
-                    playerArr.push({ ...doc.data(), id: doc.id });
-                });
-                resolve(playerArr);
-            });
-        });
-    } catch (err) {
-        console.error("Error adding document: ", err);
-        return Promise.reject(err);
-    }
+// 사용자 정보 저장
+export const saveUser = (userId, userData) => {
+  set(ref(db, `users/${userId}`), userData);
+};
+  
+// 사용자 점수 저장
+export const saveScore = (userId, scoreData) => {
+  push(ref(db, `scores/${userId}`), scoreData);
 };
 
-//getPlayerCollectionDoc();
+// 사용자 읽어오기
+export const getUsers = (callback) => {
+    onValue(ref(db, `users`), (snapshot) => {
+      const users = [];
+      snapshot.forEach((childSnapshot) => {
+        users.push(childSnapshot.val());
+      });
+      callback(users);
+    });
+  };
+  
+// 사용자 점수 읽어오기
+export const getScores = (userId, callback) => {
+  onValue(ref(db, `scores/${userId}`), (snapshot) => {
+    const scores = [];
+    snapshot.forEach((childSnapshot) => {
+      scores.push(childSnapshot.val());
+    });
+    callback(scores);
+  });
+};
 
-const updatePlayerByRecord = () => {
-    let recoredArr = []
-    try {
-        onSnapshot(recordColRef, (snapshot) => {
-            const updates = [];
-
-            snapshot?.forEach((docData) => {
-                let recordDoc = doc(db, "record", docData.id)
-                let winnerDoc = doc(db, "player", docData.data().winner)
-                let loserDoc = doc(db, "player", docData.data().loser)
-
-                if (docData.data()?.update !== true) {
-                    console.log("docData.data()", docData.data())
-                    updates.push(
-                        {
-                            ref: recordDoc,
-                            update: { update: true },
-                        },
-                        {
-                            ref: winnerDoc,
-                            update: { win: increment(1) },
-                        },
-                        {
-                            ref: loserDoc,
-                            update: { lose: increment(1) },
-                        },
-                        )
-                }
-
-                recoredArr.push({ ...docData.data(), id: docData.id })
-            });
-            const batch = writeBatch(db)
-            updates.forEach(update => batch.update(update.ref, update.update))
-            batch.commit().then(updates.length = 0);
-
-            //console.log("recoredArr", recoredArr)
-        });
-        return recoredArr;
-    } catch (err) {
-        console.error("Error adding document: ", err);
-    }
-}
-
-updatePlayerByRecord()
+export default db;
